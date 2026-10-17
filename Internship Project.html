@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Online Quiz Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 800px;
+      margin: 20px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      padding: 20px 24px 28px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      text-align: center;
+      color: #222;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .quiz-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .quiz-card {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 14px 12px;
+      border: 1px solid #e2e2e2;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .quiz-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-color: #4f46e5;
+    }
+
+    .quiz-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .quiz-meta {
+      font-size: 0.82rem;
+      color: #777;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      margin-top: 6px;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .question-text {
+      font-size: 1.04rem;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: #222;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      border-radius: 10px;
+      border: 1px solid #e2e2e2;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .option:hover {
+      border-color: #4f46e5;
+      background: #f9fafb;
+    }
+
+    .option.selected {
+      border-color: #4f46e5;
+      background: #eef2ff;
+    }
+
+    .option.disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .option-label {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #d4d4d8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .option.selected .option-label {
+      border-color: #4f46e5;
+      background: #4f46e5;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .btn-primary:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .progress {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .result-summary {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      font-size: 0.93rem;
+    }
+
+    .score-big {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      font-size: 0.8rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .tag-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .tag-warning {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .tag-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .review-list {
+      margin-top: 14px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .review-item {
+      border-top: 1px solid #e5e7eb;
+      padding: 10px 0;
+      font-size: 0.9rem;
+    }
+
+    .review-item:first-child {
+      border-top: none;
+    }
+
+    .review-q {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .review-correct {
+      color: #166534;
+    }
+
+    .review-wrong {
+      color: #b91c1c;
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        margin: 10px;
+        padding: 16px;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Online Quiz Platform</h1>
+    <p class="subtitle">Choose a quiz, answer questions, and see your score instantly.</p>
+
+    <!-- Screen 1: Quiz selection -->
+    <section id="quiz-selection">
+      <h2 style="font-size:1.05rem; margin-bottom:6px;">Available Quizzes</h2>
+      <p style="font-size:0.9rem; color:#666; margin-top:0;">
+        Tap on any quiz card to begin.
+      </p>
+      <div class="quiz-list" id="quizList"></div>
+    </section>
+
+    <!-- Screen 2: Quiz area -->
+    <section id="quiz-screen" class="hidden">
+      <div class="question-header">
+        <div id="quizTitle"></div>
+        <div id="questionProgress"></div>
+      </div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="controls">
+        <button class="btn-secondary" id="btnBack">← Back to quizzes</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="progress" id="attemptInfo"></span>
+          <button class="btn-primary" id="btnNext" disabled>Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 3: Result screen -->
+    <section id="result-screen" class="hidden">
+      <h2 style="font-size:1.1rem; margin-bottom:8px;">Quiz Result</h2>
+      <div class="result-summary" id="resultSummary"></div>
+      <div class="review-list" id="reviewList"></div>
+
+      <div style="margin-top:14px; display:flex; justify-content:space-between; gap:8px;">
+        <button class="btn-secondary" id="btnHome">← Back to quizzes</button>
+        <button class="btn-primary" id="btnRetake">Retake this quiz</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // -------- QUIZ DATA (EDIT THIS PART TO ADD YOUR OWN QUIZZES) -----------
+    const quizzes = [
+      {
+        id: "html-basic",
+        title: "HTML Basics",
+        difficulty: "Easy",
+        questions: [
+          {
+            text: "What does HTML stand for?",
+            options: [
+              "Hyper Trainer Marking Language",
+              "Hyper Text Markup Language",
+              "Hyper Text Making Language",
+              "Hyperlinks Text Mark Language"
+            ],
+            correctIndex: 1
+          },
+          {
+            text: "Which tag is used to create a hyperlink?",
+            options: ["<link>", "<href>", "<a>", "<url>"],
+            correctIndex: 2
+          },
+          {
+            text: "Which tag is used to display the largest heading?",
+            options: ["<heading>", "<h6>", "<h1>", "<head>"],
+            correctIndex: 2
+          }
+        ]
+      },
+      {
+        id: "css-basic",
+        title: "CSS Basics",
+        difficulty: "Medium",
+        questions: [
+          {
+            text: "Which property is used to change the text color?",
+            options: ["font-color", "text-color", "color", "foreground"],
+            correctIndex: 2
+          },
+          {
+            text: "How do you select an element with id='header' in CSS?",
+            options: ["header {}", ".header {}", "#header {}", "*header {}"],
+            correctIndex: 2
+          },
+          {
+            text: "Which property controls the size of text?",
+            options: ["font-style", "text-size", "font-size", "text-style"],
+            correctIndex: 2
+          }
+        ]
+      },
+      {
+        id: "java-basic",
+        title: "Java Basics",
+        difficulty: "Medium",
+        questions: [
+          {
+            text: "Which keyword is used to create a subclass in Java?",
+            options: ["this", "super", "extends", "implements"],
+            correctIndex: 2
+          },
+          {
+            text: "Which of these is NOT a Java primitive type?",
+            options: ["int", "String", "boolean", "double"],
+            correctIndex: 1
+          },
+          {
+            text: "Which method is the entry point of a Java program?",
+            options: [
+              "start()",
+              "main()",
+              "run()",
+              "public()"
+            ],
+            correctIndex: 1
+          }
+        ]
+      }
+    ];
+
+    // --------------------- STATE VARIABLES ---------------------
+    let currentQuiz = null;
+    let currentQuestionIndex = 0;
+    let selectedAnswers = []; // stores index of selected options (or null)
+
+    // ---------------------- DOM ELEMENTS -----------------------
+    const quizSelectionSection = document.getElementById("quiz-selection");
+    const quizScreenSection = document.getElementById("quiz-screen");
+    const resultScreenSection = document.getElementById("result-screen");
+
+    const quizListEl = document.getElementById("quizList");
+    const quizTitleEl = document.getElementById("quizTitle");
+    const questionProgressEl = document.getElementById("questionProgress");
+    const questionTextEl = document.getElementById("questionText");
+    const optionsContainerEl = document.getElementById("optionsContainer");
+    const attemptInfoEl = document.getElementById("attemptInfo");
+
+    const btnBack = document.getElementById("btnBack");
+    const btnNext = document.getElementById("btnNext");
+    const btnHome = document.getElementById("btnHome");
+    const btnRetake = document.getElementById("btnRetake");
+
+    const resultSummaryEl = document.getElementById("resultSummary");
+    const reviewListEl = document.getElementById("reviewList");
+
+    // ---------------------- RENDER QUIZ LIST -------------------
+    function renderQuizList() {
+      quizListEl.innerHTML = "";
+      quizzes.forEach((quiz) => {
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        card.innerHTML = `
+          <div class="quiz-title">${quiz.title}</div>
+          <div class="quiz-meta">
+            ${quiz.questions.length} questions
+          </div>
+          <span class="badge">${quiz.difficulty}</span>
+        `;
+        card.addEventListener("click", () => startQuiz(quiz.id));
+        quizListEl.appendChild(card);
+      });
+    }
+
+    // ---------------------- START QUIZ -------------------------
+    function startQuiz(quizId) {
+      currentQuiz = quizzes.find((q) => q.id === quizId);
+      if (!currentQuiz) return;
+
+      currentQuestionIndex = 0;
+      selectedAnswers = new Array(currentQuiz.questions.length).fill(null);
+
+      quizTitleEl.textContent = currentQuiz.title;
+      quizSelectionSection.classList.add("hidden");
+      resultScreenSection.classList.add("hidden");
+      quizScreenSection.classList.remove("hidden");
+
+      renderQuestion();
+    }
+
+    // ---------------------- RENDER QUESTION --------------------
+    function renderQuestion() {
+      const q = currentQuiz.questions[currentQuestionIndex];
+      questionTextEl.textContent = q.text;
+      questionProgressEl.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuiz.questions.length}`;
+
+      optionsContainerEl.innerHTML = "";
+      const optionLabels = ["A", "B", "C", "D"];
+
+      q.options.forEach((opt, index) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        if (selectedAnswers[currentQuestionIndex] === index) {
+          div.classList.add("selected");
+        }
+        div.innerHTML = `
+          <div class="option-label">${optionLabels[index]}</div>
+          <div>${opt}</div>
+        `;
+        div.addEventListener("click", () => {
+          selectedAnswers[currentQuestionIndex] = index;
+          updateOptionsSelection();
+          updateNextButton();
+          updateAttemptInfo();
+        });
+        optionsContainerEl.appendChild(div);
+      });
+
+      updateNextButton();
+      updateAttemptInfo();
+    }
+
+    function updateOptionsSelection() {
+      const optionDivs = optionsContainerEl.querySelectorAll(".option");
+      optionDivs.forEach((div, idx) => {
+        div.classList.toggle("selected", selectedAnswers[currentQuestionIndex] === idx);
+      });
+    }
+
+    function updateNextButton() {
+      const isLast = currentQuestionIndex === currentQuiz.questions.length - 1;
+      btnNext.textContent = isLast ? "Submit Quiz →" : "Next →";
+      btnNext.disabled = selectedAnswers[currentQuestionIndex] === null;
+    }
+
+    function updateAttemptInfo() {
+      const attempted = selectedAnswers.filter((x) => x !== null).length;
+      attemptInfoEl.textContent = `${attempted}/${currentQuiz.questions.length} answered`;
+    }
+
+    // ---------------------- SHOW RESULTS -----------------------
+    function showResults() {
+      quizScreenSection.classList.add("hidden");
+      resultScreenSection.classList.remove("hidden");
+
+      const questions = currentQuiz.questions;
+      let correctCount = 0;
+      let wrongCount = 0;
+      let unattempted = 0;
+
+      questions.forEach((q, i) => {
+        if (selectedAnswers[i] === null) {
+          unattempted++;
+        } else if (selectedAnswers[i] === q.correctIndex) {
+          correctCount++;
+        } else {
+          wrongCount++;
+        }
+      });
+
+      const total = questions.length;
+      const score = correctCount * 1; // 1 mark per correct
+      const percentage = ((score / total) * 100).toFixed(1);
+
+      let tagHtml = "";
+      if (percentage >= 75) {
+        tagHtml = `<span class="tag tag-success">Excellent 🎉</span>`;
+      } else if (percentage >= 50) {
+        tagHtml = `<span class="tag tag-warning">Good 🙂</span>`;
+      } else {
+        tagHtml = `<span class="tag tag-danger">Keep Practicing 💪</span>`;
+      }
+
+      resultSummaryEl.innerHTML = `
+        <div class="score-big">
+          Score: ${score}/${total} (${percentage}%)
+        </div>
+        <div style="margin-bottom:4px;">
+          Correct: <b>${correctCount}</b> &nbsp;|&nbsp;
+          Wrong: <b>${wrongCount}</b> &nbsp;|&nbsp;
+          Unattempted: <b>${unattempted}</b>
+        </div>
+        ${tagHtml}
+      `;
+
+      // Detailed review
+      reviewListEl.innerHTML = "";
+      const optionLabels = ["A", "B", "C", "D"];
+
+      questions.forEach((q, i) => {
+        const userAns = selectedAnswers[i];
+        const correctIdx = q.correctIndex;
+
+        const item = document.createElement("div");
+        item.className = "review-item";
+
+        let statusText = "";
+        if (userAns === null) {
+          statusText = `<span class="review-wrong">Not answered</span>`;
+        } else if (userAns === correctIdx) {
+          statusText = `<span class="review-correct">Correct</span>`;
+        } else {
+          statusText = `<span class="review-wrong">Wrong</span>`;
+        }
+
+        item.innerHTML = `
+          <div class="review-q">Q${i + 1}. ${q.text}</div>
+          <div>Status: ${statusText}</div>
+          <div>Correct answer: <b>${optionLabels[correctIdx]}. ${q.options[correctIdx]}</b></div>
+          ${
+            userAns !== null
+              ? `<div>Your answer: ${optionLabels[userAns]}. ${q.options[userAns]}</div>`
+              : ""
+          }
+        `;
+        reviewListEl.appendChild(item);
+      });
+    }
+
+    // ---------------------- EVENT LISTENERS ---------------------
+    btnBack.addEventListener("click", () => {
+      quizScreenSection.classList.add("hidden");
+      resultScreenSection.classList.add("hidden");
+      quizSelectionSection.classList.remove("hidden");
+    });
+
+    btnNext.addEventListener("click", () => {
+      const isLast = currentQuestionIndex === currentQuiz.questions.length - 1;
+      if (isLast) {
+        showResults();
+      } else {
+        currentQuestionIndex++;
+        renderQuestion();
+      }
+    });
+
+    btnHome.addEventListener("click", () => {
+      resultScreenSection.classList.add("hidden");
+      quizSelectionSection.classList.remove("hidden");
+    });
+
+    btnRetake.addEventListener("click", () => {
+      startQuiz(currentQuiz.id);
+    });
+
+    // ---------------------- INITIALIZE --------------------------
+    renderQuizList();
+  </script>
+</body>
+</html>
